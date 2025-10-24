@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_24_183447) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_24_192733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,7 +54,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_183447) do
     t.bigint "assignee_id"
     t.datetime "created_at", null: false
     t.bigint "epic_id", null: false
-    t.integer "priorty"
+    t.integer "priority"
     t.bigint "project_id", null: false
     t.integer "status"
     t.string "title"

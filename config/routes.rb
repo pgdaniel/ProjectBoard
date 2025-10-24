@@ -5,6 +5,14 @@ Rails.application.routes.draw do
   # Debug routes
   get "debug/tree" => "debug#tree", as: :debug_tree
 
+  namespace :api do
+    namespace :v1 do
+      resources :projects do
+        resources :stories, only: [:index, :create, :update, :destroy, :show]
+      end
+    end
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

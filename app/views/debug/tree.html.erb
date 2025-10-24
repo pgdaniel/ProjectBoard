@@ -59,7 +59,7 @@
                                     <strong><%= story.status %></strong>
                                   </td>
                                   <td style="padding: 6px; border: 1px solid #ddd; color: #cc0000;">
-                                    <strong><%= story.priorty %></strong>
+                                    <strong><%= story.priority %></strong>
                                   </td>
                                   <td style="padding: 6px; border: 1px solid #ddd;">
                                     <%= story.assignee&.email_address || "—" %>
@@ -79,7 +79,7 @@
                           <div style="padding: 4px;">
                             📌 <%= story.title %>
                             | Status: <strong><%= story.status %></strong>
-                            | Priority: <strong><%= story.priorty %></strong>
+                            | Priority: <strong><%= story.priority %></strong>
                           </div>
                         <% end %>
                       </div>
