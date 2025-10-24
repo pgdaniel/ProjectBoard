@@ -1,0 +1,142 @@
+<div style="font-family: monospace; padding: 20px;">
+  <h1>Database Tree Structure</h1>
+
+  <h2>Organizations</h2>
+  <% @organizations.each do |org| %>
+    <div style="margin-left: 0; background: #f0f0f0; padding: 10px; margin-bottom: 10px;">
+      <strong>🏢 Organization:</strong> <%= org.name %>
+      <p><em><%= org.description %></em></p>
+
+      <div style="margin-left: 20px;">
+        <h3>Teams</h3>
+        <% org.teams.each do |team| %>
+          <div style="background: #e8f0ff; padding: 8px; margin-bottom: 8px;">
+            <strong>👥 Team:</strong> <%= team.name %>
+            <p><em><%= team.description %></em></p>
+
+            <div style="margin-left: 20px;">
+              <h4>Team Members</h4>
+              <ul>
+                <% team.team_members.each do |member| %>
+                  <li>
+                    👤 <%= member.user.email_address %>
+                    <span style="color: #666;">(Role: <%= member.role %>)</span>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+
+            <div style="margin-left: 20px;">
+              <h4>Projects</h4>
+              <% team.projects.each do |project| %>
+                <div style="background: #fff4e6; padding: 8px; margin-bottom: 8px;">
+                  <strong>📋 Project:</strong> <%= project.name %>
+                  <p><em><%= project.description %></em></p>
+
+                  <div style="margin-left: 20px;">
+                    <h5>Epics</h5>
+                    <% project.epics.each do |epic| %>
+                      <div style="background: #ffe6f0; padding: 6px; margin-bottom: 6px;">
+                        <strong>🎯 Epic:</strong> <%= epic.title %>
+                        <span style="color: #666;">(Type: <%= epic.type %>)</span>
+
+                        <div style="margin-left: 20px;">
+                          <h6>Stories</h6>
+                          <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                              <tr style="background: #f9f9f9; border-bottom: 1px solid #ddd;">
+                                <th style="padding: 6px; text-align: left; border: 1px solid #ddd;">Title</th>
+                                <th style="padding: 6px; text-align: left; border: 1px solid #ddd;">Status</th>
+                                <th style="padding: 6px; text-align: left; border: 1px solid #ddd;">Priority</th>
+                                <th style="padding: 6px; text-align: left; border: 1px solid #ddd;">Assignee</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <% epic.stories.each do |story| %>
+                                <tr style="border-bottom: 1px solid #ddd;">
+                                  <td style="padding: 6px; border: 1px solid #ddd;">📌 <%= story.title %></td>
+                                  <td style="padding: 6px; border: 1px solid #ddd; color: #0066cc;">
+                                    <strong><%= story.status %></strong>
+                                  </td>
+                                  <td style="padding: 6px; border: 1px solid #ddd; color: #cc0000;">
+                                    <strong><%= story.priorty %></strong>
+                                  </td>
+                                  <td style="padding: 6px; border: 1px solid #ddd;">
+                                    <%= story.assignee&.email_address || "—" %>
+                                  </td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <% if project.stories.where(epic_id: nil).any? %>
+                      <div style="background: #f0f0f0; padding: 8px; margin-top: 10px; border: 2px dashed #999;">
+                        <strong>⚠️ Stories without Epic</strong>
+                        <% project.stories.where(epic_id: nil).each do |story| %>
+                          <div style="padding: 4px;">
+                            📌 <%= story.title %>
+                            | Status: <strong><%= story.status %></strong>
+                            | Priority: <strong><%= story.priorty %></strong>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if org.projects.where(team_id: nil).any? || org.projects.where(team: Team.none).any? %>
+          <h4>Projects without Team</h4>
+          <% org.projects.includes(:team).select { |p| p.team_id.nil? }.each do |project| %>
+            <div style="background: #fff0f0; padding: 8px; margin-bottom: 8px; border: 2px dashed #ff0000;">
+              <strong>⚠️ Project:</strong> <%= project.name %>
+              <p><em><%= project.description %></em></p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <hr style="margin: 30px 0; border: 1px solid #ccc;">
+
+  <h2>Users Summary</h2>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #f0f0f0; border-bottom: 2px solid #333;">
+        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Email</th>
+        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Role</th>
+        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Teams</th>
+        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Stories Assigned</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 10px; border: 1px solid #ddd;">👤 <%= user.email_address %></td>
+          <td style="padding: 10px; border: 1px solid #ddd;"><strong><%= user.role %></strong></td>
+          <td style="padding: 10px; border: 1px solid #ddd;">
+            <% if user.teams.any? %>
+              <%= user.teams.map(&:name).join(", ") %>
+            <% else %>
+              <em style="color: #999;">None</em>
+            <% end %>
+          </td>
+          <td style="padding: 10px; border: 1px solid #ddd;">
+            <% if user.stories.any? %>
+              <%= user.stories.count %> stories
+            <% else %>
+              <em style="color: #999;">None assigned</em>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
