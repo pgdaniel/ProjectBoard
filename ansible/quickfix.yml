@@ -1,0 +1,38 @@
+---
+# Quick fix: Add 172.18.0.0/16 network to existing PostgreSQL configuration
+- name: Add Docker network 172.18.0.0/16 to PostgreSQL access
+  hosts: all
+  become: yes
+  vars:
+    postgres_version: "16"
+
+  tasks:
+    - name: Add 172.18.0.0/16 network to pg_hba.conf (Debian/Ubuntu)
+      postgresql_pg_hba:
+        dest: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        contype: host
+        databases: all
+        users: all
+        source: 172.18.0.0/16
+        method: md5
+        state: present
+      notify: restart postgresql
+      when: ansible_os_family == "Debian"
+
+    - name: Add 172.18.0.0/16 network to pg_hba.conf (RedHat/CentOS)
+      postgresql_pg_hba:
+        dest: /var/lib/pgsql/data/pg_hba.conf
+        contype: host
+        databases: all
+        users: all
+        source: 172.18.0.0/16
+        method: md5
+        state: present
+      notify: restart postgresql
+      when: ansible_os_family == "RedHat"
+
+  handlers:
+    - name: restart postgresql
+      systemd:
+        name: postgresql
+        state: restarted

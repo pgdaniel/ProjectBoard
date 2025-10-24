@@ -1,0 +1,103 @@
+---
+- name: Install and configure PostgreSQL for Docker connections
+  hosts: all
+  become: yes
+  vars:
+    postgres_version: "16"
+    postgres_user: "rails"
+    postgres_password: "blahblah1"
+    postgres_db: "project_board_production"
+
+  tasks:
+    - name: Install PostgreSQL and dependencies
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+          - python3-psycopg2
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install PostgreSQL on RedHat/CentOS
+      yum:
+        name:
+          - postgresql-server
+          - postgresql-contrib
+          - python3-psycopg2
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Initialize PostgreSQL database (RedHat only)
+      command: postgresql-setup --initdb
+      when: ansible_os_family == "RedHat"
+      ignore_errors: yes
+
+    - name: Ensure PostgreSQL is started and enabled
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Create PostgreSQL user
+      postgresql_user:
+        name: "{{ postgres_user }}"
+        password: "{{ postgres_password }}"
+        role_attr_flags: CREATEDB,NOSUPERUSER
+        state: present
+      become_user: postgres
+
+    - name: Create PostgreSQL database
+      postgresql_db:
+        name: "{{ postgres_db }}"
+        owner: "{{ postgres_user }}"
+        state: present
+      become_user: postgres
+
+    - name: Configure pg_hba.conf to allow Docker connections
+      postgresql_pg_hba:
+        dest: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        contype: host
+        databases: all
+        users: all
+        source: 172.17.0.0/16
+        method: md5
+        state: present
+      notify: restart postgresql
+      when: ansible_os_family == "Debian"
+
+    - name: Configure pg_hba.conf to allow Docker connections (RedHat)
+      postgresql_pg_hba:
+        dest: /var/lib/pgsql/data/pg_hba.conf
+        contype: host
+        databases: all
+        users: all
+        source: 172.17.0.0/16
+        method: md5
+        state: present
+      notify: restart postgresql
+      when: ansible_os_family == "RedHat"
+
+    - name: Configure PostgreSQL to listen on all addresses (Debian)
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
+        regexp: "^#?listen_addresses"
+        line: "listen_addresses = '*'"
+        state: present
+      notify: restart postgresql
+      when: ansible_os_family == "Debian"
+
+    - name: Configure PostgreSQL to listen on all addresses (RedHat)
+      lineinfile:
+        path: /var/lib/pgsql/data/postgresql.conf
+        regexp: "^#?listen_addresses"
+        line: "listen_addresses = '*'"
+        state: present
+      notify: restart postgresql
+      when: ansible_os_family == "RedHat"
+
+  handlers:
+    - name: restart postgresql
+      systemd:
+        name: postgresql
+        state: restarted

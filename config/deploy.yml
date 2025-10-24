@@ -7,7 +7,7 @@ image: project_board
 # Deploy to these servers.
 servers:
   web:
-    - 178.128.150.121
+    - 159.65.251.69
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -19,7 +19,7 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
-  host: projectcmdr.dev
+  host: dashcmd.com
 
 # Where you keep your container images.
 registry:
