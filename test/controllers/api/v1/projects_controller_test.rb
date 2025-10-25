@@ -4,10 +4,9 @@ module Api
   module V1
     class ProjectsControllerTest < ActionDispatch::IntegrationTest
       setup do
-        @organization = organizations(:one)
-        @team = teams(:one)
-        @project = projects(:one)
-        @project.update(team: @team, organization: @organization)
+        @organization = Organization.create!(name: "Test Org", description: "Test")
+        @team = Team.create!(name: "Test Team", organization: @organization, description: "Test")
+        @project = Project.create!(name: "Test Project", team: @team, organization: @organization)
       end
 
       test "GET /api/v1/projects returns all projects" do
@@ -181,7 +180,7 @@ module Api
       end
 
       test "GET /api/v1/projects/:id includes epics" do
-        epic = Epic.create!(project: @project, title: "Test Epic", type_enum: "feature")
+        epic = Epic.create!(project: @project, title: "Test Epic", type: "feature")
 
         get api_v1_project_path(@project)
 
@@ -193,7 +192,7 @@ module Api
       end
 
       test "GET /api/v1/projects/:id includes stories" do
-        epic = Epic.create!(project: @project, title: "Test Epic", type_enum: "feature")
+        epic = Epic.create!(project: @project, title: "Test Epic", type: "feature")
         story = Story.create!(epic: epic, project: @project, title: "Test Story", status: "todo", priority: "medium")
 
         get api_v1_project_path(@project)

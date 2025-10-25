@@ -2,11 +2,10 @@ require "test_helper"
 
 class StoryTest < ActiveSupport::TestCase
   setup do
-    @organization = organizations(:one)
-    @team = teams(:one)
-    @project = projects(:one)
-    @project.update(team: @team, organization: @organization)
-    @epic = Epic.create!(project: @project, title: "Test Epic", type_enum: "feature")
+    @organization = Organization.create!(name: "Test Org", description: "Test")
+    @team = Team.create!(name: "Test Team", organization: @organization, description: "Test")
+    @project = Project.create!(name: "Test Project", team: @team, organization: @organization)
+    @epic = Epic.create!(project: @project, title: "Test Epic", type: "feature")
   end
 
   # Association Tests

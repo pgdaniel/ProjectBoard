@@ -1,7 +1,11 @@
 require "test_helper"
 
 class SessionsControllerTest < ActionDispatch::IntegrationTest
-  setup { @user = User.take }
+  setup do
+    @user = User.find_or_create_by(email_address: "test@example.com") do |u|
+      u.password = "password"
+    end
+  end
 
   test "new" do
     get new_session_path

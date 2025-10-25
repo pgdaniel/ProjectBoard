@@ -2,8 +2,8 @@ require "test_helper"
 
 class ProjectTest < ActiveSupport::TestCase
   setup do
-    @organization = organizations(:one)
-    @team = teams(:one)
+    @organization = Organization.create!(name: "Test Org", description: "Test")
+    @team = Team.create!(name: "Test Team", organization: @organization, description: "Test")
   end
 
   # Association Tests
@@ -33,8 +33,8 @@ class ProjectTest < ActiveSupport::TestCase
       team: @team,
       organization: @organization
     )
-    epic1 = Epic.create!(project: project, title: "Epic 1", type_enum: "feature")
-    epic2 = Epic.create!(project: project, title: "Epic 2", type_enum: "backlog")
+    epic1 = Epic.create!(project: project, title: "Epic 1", type: "feature")
+    epic2 = Epic.create!(project: project, title: "Epic 2", type: "backlog")
 
     assert_includes project.epics, epic1
     assert_includes project.epics, epic2
@@ -47,7 +47,7 @@ class ProjectTest < ActiveSupport::TestCase
       team: @team,
       organization: @organization
     )
-    epic = Epic.create!(project: project, title: "Test Epic", type_enum: "feature")
+    epic = Epic.create!(project: project, title: "Test Epic", type: "feature")
     story1 = Story.create!(epic: epic, project: project, title: "Story 1", status: "todo", priority: "high")
     story2 = Story.create!(epic: epic, project: project, title: "Story 2", status: "todo", priority: "low")
 
@@ -94,7 +94,7 @@ class ProjectTest < ActiveSupport::TestCase
       team: @team,
       organization: @organization
     )
-    epic = Epic.create!(project: project, title: "Test Epic", type_enum: "feature")
+    epic = Epic.create!(project: project, title: "Test Epic", type: "feature")
     epic_id = epic.id
 
     project.destroy
@@ -108,7 +108,7 @@ class ProjectTest < ActiveSupport::TestCase
       team: @team,
       organization: @organization
     )
-    epic = Epic.create!(project: project, title: "Test Epic", type_enum: "feature")
+    epic = Epic.create!(project: project, title: "Test Epic", type: "feature")
     story = Story.create!(epic: epic, project: project, title: "Test Story", status: "todo", priority: "medium")
     story_id = story.id
 

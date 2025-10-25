@@ -8,9 +8,8 @@ module ActiveSupport
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
 
-    # Setup fixtures - only load users and organizations (minimal dependencies)
-    # Other fixtures are created dynamically in tests
-    fixtures :users, :organizations
+    # Don't load any fixtures - tests create models dynamically
+    # This avoids foreign key constraint issues with managed databases
 
     # Add more helper methods to be used by all tests here...
   end
