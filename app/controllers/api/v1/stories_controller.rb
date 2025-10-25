@@ -60,7 +60,12 @@ module Api
       def convert_enum_value(value)
         case value
         when String
-          value.underscore
+          # Check if it's a numeric string (from Pivotal Tracker)
+          if value.match?(/^\d+$/)
+            value.to_i
+          else
+            value.underscore
+          end
         when Integer
           # Handle numeric enum values (0, 1, 2, 3)
           # Priority: 0=low, 1=medium, 2=high
