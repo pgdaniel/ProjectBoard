@@ -1,0 +1,221 @@
+---
+- name: Deploy Project Board with Docker and Caddy
+  hosts: database_servers
+  become: yes
+  vars:
+    docker_registry_user: pgdaniel
+    docker_registry_password: "{{ lookup('env', 'DOCKER_PASSWORD') }}"
+    rails_master_key: "{{ lookup('env', 'RAILS_MASTER_KEY') }}"
+    database_url: "{{ lookup('env', 'DATABASE_URL') }}"
+    rails_image: "{{ docker_registry_user }}/project_board:latest"
+    react_image: "{{ docker_registry_user }}/project-board-react:latest"
+    rails_container_name: project-board-rails
+    react_container_name: project-board-react
+    caddy_config_path: /etc/caddy/Caddyfile
+    domain: dashcmd.com
+    react_domain: "app.{{ domain }}"
+    redis_host: linkboxer-redis
+    redis_port: 6379
+
+  tasks:
+    # Docker login
+    - name: Log in to Docker Hub
+      shell: |
+        echo "{{ docker_registry_password }}" | docker login -u "{{ docker_registry_user }}" --password-stdin
+      environment:
+        docker_registry_password: "{{ docker_registry_password }}"
+      changed_when: false
+
+    # Pull images
+    - name: Pull Rails image from Docker Hub
+      docker_image:
+        name: "{{ rails_image }}"
+        source: pull
+        state: present
+
+    - name: Pull React image from Docker Hub
+      docker_image:
+        name: "{{ react_image }}"
+        source: pull
+        state: present
+
+    # Create Docker network
+    - name: Create Docker network for services
+      docker_network:
+        name: project_board_network
+        state: present
+
+    # Stop and remove old containers
+    - name: Stop Rails container if running
+      docker_container:
+        name: "{{ rails_container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Stop React container if running
+      docker_container:
+        name: "{{ react_container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    # Run Rails container
+    - name: Run Rails application container
+      docker_container:
+        name: "{{ rails_container_name }}"
+        image: "{{ rails_image }}"
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: project_board_network
+        ports:
+          - "3000:3000"
+        env:
+          RAILS_MASTER_KEY: "{{ rails_master_key }}"
+          DATABASE_URL: "{{ database_url }}"
+          REDIS_URL: "redis://{{ redis_host }}:{{ redis_port }}/0"
+          RAILS_ENV: production
+          SOLID_QUEUE_IN_PUMA: "false"
+        volumes:
+          - project_board_storage:/rails/storage
+        log_driver: json-file
+        log_options:
+          max-size: "10m"
+        healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
+          interval: 10s
+          timeout: 5s
+          retries: 3
+          start_period: 30s
+
+    # Run React container
+    - name: Run React application container
+      docker_container:
+        name: "{{ react_container_name }}"
+        image: "{{ react_image }}"
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: project_board_network
+        ports:
+          - "5173:5173"
+        env:
+          VITE_API_URL: "https://{{ domain }}/api/v1"
+        log_driver: json-file
+        log_options:
+          max-size: "10m"
+
+    # Install Caddy if not already installed
+    - name: Install Caddy
+      apt:
+        name: caddy
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Caddy on RedHat/CentOS
+      yum:
+        name: caddy
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    # Create Caddyfile for reverse proxy
+    - name: Create Caddyfile for reverse proxy
+      copy:
+        content: |
+          # Caddy configuration for Project Board
+          # Automatically handles HTTPS with Let's Encrypt
+
+          # Rails API on dashcmd.com
+          {{ domain }} {
+              encode gzip
+
+              # Handle CORS preflight requests
+              @cors_preflight method OPTIONS
+              handle @cors_preflight {
+                  header Access-Control-Allow-Origin "https://{{ react_domain }}"
+                  header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+                  header Access-Control-Allow-Headers "Content-Type, Authorization"
+                  header Access-Control-Max-Age "86400"
+                  respond 204
+              }
+
+              reverse_proxy 127.0.0.1:3000 {
+                  header_up Host {host}
+                  header_up X-Real-IP {remote_host}
+                  header_up X-Forwarded-For {remote_host}
+                  header_up X-Forwarded-Proto {scheme}
+                  header_up Origin {http.request.header.Origin}
+              }
+
+              # Add CORS headers to all responses
+              header Access-Control-Allow-Origin "https://{{ react_domain }}"
+              header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+              header Access-Control-Allow-Headers "Content-Type, Authorization"
+          }
+
+          # React app on app.dashcmd.com
+          {{ react_domain }} {
+              encode gzip
+
+              reverse_proxy 127.0.0.1:5173 {
+                  header_up Host {host}
+                  header_up X-Real-IP {remote_host}
+                  header_up X-Forwarded-For {remote_host}
+                  header_up X-Forwarded-Proto {scheme}
+              }
+          }
+        dest: "{{ caddy_config_path }}"
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Reload Caddy
+
+    # Enable and start Caddy
+    - name: Ensure Caddy is started and enabled
+      systemd:
+        name: caddy
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Create Docker volume for Rails storage
+      docker_volume:
+        name: project_board_storage
+        state: present
+
+    # Verify deployments
+    - name: Wait for Rails to be healthy
+      uri:
+        url: "http://localhost:3000/up"
+        method: GET
+        status_code: 200
+      retries: 30
+      delay: 2
+      register: result
+      until: result.status == 200
+
+    - name: Wait for React to be healthy
+      uri:
+        url: "http://localhost:5173"
+        method: GET
+        status_code: 200
+      retries: 30
+      delay: 2
+      register: result
+      until: result.status == 200
+
+    - name: Display deployment summary
+      debug:
+        msg:
+          - "Deployment completed successfully!"
+          - "Rails API: https://{{ domain }}/api/v1"
+          - "React App: https://{{ react_domain }}"
+          - "Make sure DNS is configured:"
+          - "  {{ domain }} A 159.65.251.69"
+          - "  {{ react_domain }} A 159.65.251.69"
+
+  handlers:
+    - name: Reload Caddy
+      systemd:
+        name: caddy
+        state: reloaded

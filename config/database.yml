@@ -105,13 +105,6 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    # database: base_system_production
-    # username: base_system
-    password: <%= ENV["BASE_SYSTEM_DATABASE_PASSWORD"] %>
-    database: <%= ENV['DATABASE_NAME'] %>
-    username: <%= ENV['DATABASE_USERNAME'] %>
-    password: <%= ENV['DATABASE_PASSWORD'] %>
-    host: <%= ENV['DATABASE_HOST'] %>
-    port: <%= ENV['DATABASE_PORT'] %>
+    url: <%= ENV['DATABASE_URL'] %>
     pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   # cable:

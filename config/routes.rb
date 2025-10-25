@@ -3,7 +3,9 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
 
   # Debug routes
-  get "debug/tree" => "debug#tree", as: :debug_tree
+  if Rails.env.development?
+    get "debug/tree" => "debug#tree", as: :debug_tree
+  end
 
   namespace :api do
     namespace :v1 do

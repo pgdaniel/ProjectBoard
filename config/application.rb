@@ -23,13 +23,5 @@ module ProjectBoard
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
-
-    # Enable CORS for API requests
-    config.middleware.insert_before 0, Rack::Cors do
-      allow do
-        origins 'localhost:5173', 'localhost:3000', '127.0.0.1:5173', '127.0.0.1:3000'
-        resource '*', headers: :any, methods: [:get, :post, :put, :patch, :delete, :options]
-      end
-    end
   end
 end

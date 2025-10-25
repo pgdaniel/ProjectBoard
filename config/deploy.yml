@@ -2,7 +2,7 @@
 service: project_board
 
 # Name of the container image (use your-user/app-name on external registries).
-image: project_board
+image: pgdaniel/project_board
 
 # Deploy to these servers.
 servers:
@@ -19,19 +19,21 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
-  host: dashcmd.com
+  hosts:
+    - dashcmd.com
+    - app.dashcmd.com
 
 # Where you keep your container images.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
+  # Alternatives: docker.io / registry.digitalocean.com / ghcr.io / ...
+  server: docker.io
 
   # Needed for authenticated registries.
-  # username: your-user
+  username: pgdaniel
 
   # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
@@ -123,3 +125,12 @@ builder:
 #     port: 6379
 #     directories:
 #       - data:/data
+accessories:
+  react:
+    image: pgdaniel/project-board-react:latest
+    host: 159.65.251.69
+    port: "127.0.0.1:5173:5173"
+    env:
+      clear:
+        VITE_API_URL: https://dashcmd.com/api/v1
+
