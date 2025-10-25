@@ -72,7 +72,7 @@ module Api
           end
         when Integer
           # Handle numeric enum values - just return as-is
-          # Priority: 0=blocker (highest), 1=high, 2=medium, 3=low (lowest)
+          # Priority: 0=low (lowest), 1=medium, 2=high, 3=blocker (highest)
           # Status: 0=icebox, 1=todo, 2=in_progress, 3=completed
           value
         else
