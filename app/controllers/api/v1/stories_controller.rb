@@ -58,8 +58,14 @@ module Api
       end
 
       def convert_enum_value(value)
-        if value.is_a?(String)
+        case value
+        when String
           value.underscore
+        when Integer
+          # Handle numeric enum values (0, 1, 2, 3)
+          # Priority: 0=low, 1=medium, 2=high
+          # Status: 0=icebox, 1=todo, 2=in_progress, 3=completed
+          value
         else
           value
         end
