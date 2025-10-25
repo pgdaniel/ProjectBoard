@@ -2,10 +2,10 @@
 
 one:
   title: MyString
-  type: 1
+  type: feature
   project: one
 
 two:
   title: MyString
-  type: 1
+  type: backlog
   project: two
