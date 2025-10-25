@@ -14,9 +14,14 @@ end
 
 json.epics project.epics do |epic|
   json.extract! epic, :id, :title, :type, :created_at, :updated_at
+  json.stories epic.stories do |story|
+    json.extract! story, :id, :title, :priority, :assignee_id, :epic_id, :project_id, :position, :created_at, :updated_at
+    json.status story.status.camelize(:lower)
+  end
 end
 
 json.stories project.stories do |story|
   # ensure description is always a string to match API consumers
-  json.extract! story, :id, :title, :status, :priority, :assignee_id, :epic_id, :project_id, :created_at, :updated_at
+  json.extract! story, :id, :title, :priority, :assignee_id, :epic_id, :project_id, :position, :created_at, :updated_at
+  json.status story.status.camelize(:lower)
 end

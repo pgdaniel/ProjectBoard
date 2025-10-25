@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_24_192733) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_25_203337) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,6 +54,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_192733) do
     t.bigint "assignee_id"
     t.datetime "created_at", null: false
     t.bigint "epic_id", null: false
+    t.integer "position", default: 0
     t.integer "priority"
     t.bigint "project_id", null: false
     t.integer "status"
@@ -61,6 +62,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_192733) do
     t.datetime "updated_at", null: false
     t.index ["epic_id"], name: "index_stories_on_epic_id"
     t.index ["project_id"], name: "index_stories_on_project_id"
+    t.index ["status", "position"], name: "index_stories_on_status_and_position"
   end
 
   create_table "team_members", force: :cascade do |t|
