@@ -72,7 +72,8 @@ module Api
           end
         when Integer
           # Handle numeric enum values - just return as-is
-          # Rails will validate them against the enum definition
+          # Priority: 0=low, 1=medium, 2=high, 3=blocker
+          # Status: 0=icebox, 1=todo, 2=in_progress, 3=completed
           value
         else
           value
