@@ -21,6 +21,8 @@ module Api
         else
           render json: { errors: @story.errors }, status: :unprocessable_entity
         end
+      rescue ArgumentError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def update
@@ -29,6 +31,8 @@ module Api
         else
           render json: { errors: @story.errors }, status: :unprocessable_entity
         end
+      rescue ArgumentError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       def destroy
@@ -67,9 +71,8 @@ module Api
             value.underscore
           end
         when Integer
-          # Handle numeric enum values (0, 1, 2, 3)
-          # Priority: 0=low, 1=medium, 2=high
-          # Status: 0=icebox, 1=todo, 2=in_progress, 3=completed
+          # Handle numeric enum values - just return as-is
+          # Rails will validate them against the enum definition
           value
         else
           value
