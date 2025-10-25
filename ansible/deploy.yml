@@ -32,12 +32,14 @@
         name: "{{ rails_image }}"
         source: pull
         state: present
+        force_source: yes
 
     - name: Pull React image from Docker Hub
       docker_image:
         name: "{{ react_image }}"
         source: pull
         state: present
+        force_source: yes
 
     # Create Docker network
     - name: Create Docker network for services
