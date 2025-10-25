@@ -3,12 +3,10 @@ module Api
     class ProjectsController < Api::BaseController
       def index
         @projects = Project.includes(:team, :epics, :stories).all
-        render json: ProjectBlueprint.render(@projects)
       end
 
       def show
         @project = Project.includes(:team, :epics, stories: :assignee).find(params[:id])
-        render json: ProjectBlueprint.render(@project)
       rescue ActiveRecord::RecordNotFound
         render json: { error: "Project not found" }, status: :not_found
       end
@@ -16,7 +14,7 @@ module Api
       def create
         @project = Project.new(project_params)
         if @project.save
-          render json: ProjectBlueprint.render(@project), status: :created
+          render :create, status: :created
         else
           render json: { errors: @project.errors }, status: :unprocessable_entity
         end
@@ -25,7 +23,7 @@ module Api
       def update
         @project = Project.find(params[:id])
         if @project.update(project_params)
-          render json: ProjectBlueprint.render(@project)
+          render :show
         else
           render json: { errors: @project.errors }, status: :unprocessable_entity
         end

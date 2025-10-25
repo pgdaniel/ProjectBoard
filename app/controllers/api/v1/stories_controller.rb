@@ -7,17 +7,15 @@ module Api
 
       def index
         @stories = @project.stories.includes(:assignee, :epic)
-        render json: StoryBlueprint.render(@stories)
       end
 
       def show
-        render json: StoryBlueprint.render(@story)
       end
 
       def create
         @story = @project.stories.build(story_params)
         if @story.save
-          render json: StoryBlueprint.render(@story), status: :created
+          render :create, status: :created
         else
           render json: { errors: @story.errors }, status: :unprocessable_entity
         end
@@ -27,7 +25,7 @@ module Api
 
       def update
         if @story.update(story_params)
-          render json: StoryBlueprint.render(@story)
+          render :show
         else
           render json: { errors: @story.errors }, status: :unprocessable_entity
         end
