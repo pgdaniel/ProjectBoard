@@ -1,17 +1,2 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-one:
-  title: MyString
-  status: todo
-  priority: medium
-  assignee_id:
-  epic: one
-  project: one
-
-two:
-  title: MyString
-  status: in_progress
-  priority: high
-  assignee_id:
-  epic: two
-  project: two
+# Story fixtures are created dynamically in tests due to foreign key constraints
